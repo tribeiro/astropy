@@ -4,6 +4,7 @@ import sys
 import warnings
 
 import numpy as np
+import logging
 
 from .base import DELAYED, _ValidHDU, ExtensionHDU, BITPIX2DTYPE, DTYPE2BITPIX
 from ..header import Header
@@ -13,6 +14,14 @@ from ..verify import VerifyWarning
 from ....extern.six import string_types
 from ....extern.six.moves import range, zip
 from ....utils import isiterable, lazyproperty, classproperty, deprecated
+
+fileHandler = logging.handlers.RotatingFileHandler("astropy_image.log",
+                                                       maxBytes=100 *
+                                                       1024 * 1024,
+                                                       backupCount=10)
+
+fileHandler.setFormatter(logging.Formatter(fmt='%(asctime)s[%(levelname)s:%(threadName)s]-%(name)s-(%(filename)s:%(lineno)d):: %(message)s'))
+fileHandler.setLevel(logging.DEBUG)
 
 
 class _ImageBaseHDU(_ValidHDU):
@@ -609,6 +618,8 @@ class _ImageBaseHDU(_ValidHDU):
 
     def _writedata_internal(self, fileobj):
         size = 0
+        log = logging.getLogger('_writedata_internal')
+        log.addHandler(fileHandler)
 
         if self.data is not None:
             # Based on the system type, determine the byteorders that
@@ -620,6 +631,7 @@ class _ImageBaseHDU(_ValidHDU):
             # deal with unsigned integer 16, 32 and 64 data
             if _is_pseudo_unsigned(self.data.dtype):
                 # Convert the unsigned array to signed
+                log.debug('{} {} {}'.format(self.data.shape, self.data.dtype, self.data.dtype.itemsize))
                 output = np.array(
                     self.data - _unsigned_zero(self.data.dtype),
                     dtype='>i{}'.format(self.data.dtype.itemsize))

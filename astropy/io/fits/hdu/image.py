@@ -5,6 +5,7 @@ import warnings
 
 import numpy as np
 import logging
+import logging.handlers
 
 from .base import DELAYED, _ValidHDU, ExtensionHDU, BITPIX2DTYPE, DTYPE2BITPIX
 from ..header import Header
